@@ -3,26 +3,47 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 import "./App.css";
 
-const initialData = [
-  { id: "0", name: "item-1", dropId: "A-drop" },
-  { id: "1", name: "item-2", dropId: "A-drop" },
-  { id: "2", name: "item-3", dropId: "A-drop" },
-];
+const initialData = {
+  grupoA: {
+    id: "grupoA",
+    items: [
+      { id: "0", name: "item-1", grupo: "grupoA" },
+      { id: "1", name: "item-2", grupo: "grupoA" },
+      { id: "2", name: "item-3", grupo: "grupoA" },
+    ],
+  },
+  grupoB: {
+    id: "grupoB",
+    items: [
+      { id: "", name: "", grupo: "" },
+      { id: "", name: "", grupo: "" },
+      { id: "", name: "", grupo: "" },
+    ],
+  },
+};
+
+const reorder = (list, startIndex, endIndex) => {
+  const result = Array.from(list);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
+
+  return result;
+};
 
 function App() {
-  const [items, setItems] = useState(initialData);
+  const [grupos, setGrupos] = useState(initialData);
 
-  const returnItemsForSlock = (dropId, esInicial, itemID) => {
-    return items
-      .filter((item) =>
-        esInicial
-          ? `${item.dropId}-${item.id}` === dropId && item.id === itemID
-          : `${item.dropId}-${item.id}` === dropId
-      )
+  const returnItemsForSlock = (
+    nombreGrupo = "grupoA" | "grupoB",
+    grupoItem,
+    itemID
+  ) => {
+    return grupos[nombreGrupo].items
+      .filter((item) => nombreGrupo === grupoItem && item.id === itemID)
       .map((currenItem) => (
         <Draggable
-          key={currenItem.id}
-          draggableId={`${currenItem.dropId}-${currenItem.id}`}
+          key={`${currenItem.grupo}-${currenItem.id}`}
+          draggableId={`${currenItem.grupo}-${currenItem.id}`}
           index={Number(currenItem.id)}
         >
           {(draggableProvided) => (
@@ -41,19 +62,27 @@ function App() {
 
   const onDragEnd = (result) => {
     console.log(result);
-    const { draggableId, source } = result;
-    setItems((prev) =>
-      prev.map((item) => {
-        if (`${item.dropId}-${item.id}` === draggableId) {
-          console.log("Item encontrado", item.name);
-          return {
-            ...item,
-            dropId: "B-drop",
-          };
-        }
-        return item;
-      })
-    );
+    const { source, destination } = result;
+
+    const [grupoSource, idSource] = source.droppableId.split("-");
+
+    const [grupoDes, idDestination] = destination.droppableId.split("-");
+    const nuevoEstado = { ...grupos };
+
+    if (grupoSource !== grupoDes) {
+      const copiaSource = nuevoEstado[grupoSource].items[idSource];
+      copiaSource.grupo = "";
+      nuevoEstado[grupoDes].items[idDestination] = {
+        ...copiaSource,
+        grupo: grupoDes,
+      };
+
+      console.log(nuevoEstado);
+      setGrupos(nuevoEstado);
+    } else {
+      nuevoEstado[grupoSource].items = reorder(nuevoEstado[grupoSource].items, idSource, idDestination);
+      setGrupos(nuevoEstado);
+    }
   };
 
   return (
@@ -61,15 +90,19 @@ function App() {
       <div className="App">
         <div className="container">
           <div className="item-container">
-            {items.map((item, index) => (
-              <Droppable key={index} droppableId={`A-drop-${item.id}`}>
+            {grupos.grupoA.items.map((item, index) => (
+              <Droppable
+                key={`${grupos.grupoA.id}-${index}`}
+                droppableId={`${grupos.grupoA.id}-${index}`}
+                direction="horizontal"
+              >
                 {(droppableProvided) => (
                   <div
                     {...droppableProvided.droppableProps}
                     className="drop-item"
                     ref={droppableProvided.innerRef}
                   >
-                    {returnItemsForSlock(`A-drop-${item.id}`)}
+                    {returnItemsForSlock("grupoA", item.grupo, item.id)}
                     {droppableProvided.placeholder}
                   </div>
                 )}
@@ -78,15 +111,19 @@ function App() {
           </div>
 
           <div className="item-container">
-            {items.map((item, index) => (
-              <Droppable key={index} droppableId={`B-drop-${item.id}`}>
+            {grupos.grupoB.items.map((item, index) => (
+              <Droppable
+                key={`${grupos.grupoB.id}-${index}`}
+                droppableId={`${grupos.grupoB.id}-${index}`}
+                direction="horizontal"
+              >
                 {(droppableProvided) => (
                   <div
                     {...droppableProvided.droppableProps}
                     className="drop-item"
                     ref={droppableProvided.innerRef}
                   >
-                    {returnItemsForSlock(`B-drop-${item.id}`)}
+                    {returnItemsForSlock("grupoB", item.grupo, item.id)}
                     {droppableProvided.placeholder}
                   </div>
                 )}
@@ -100,3 +137,7 @@ function App() {
 }
 
 export default App;
+
+/* 
+  validar cuando en el slock hay un item, se deben intercambiar
+*/
