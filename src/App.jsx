@@ -23,9 +23,12 @@ const initialData = {
 };
 
 const reorder = (list, startIndex, endIndex) => {
-  const result = Array.from(list);
-  const [removed] = result.splice(startIndex, 1);
-  result.splice(endIndex, 0, removed);
+  let result = Array.from(list);
+  const itemStart = result[startIndex];
+  const itemEnd = result[endIndex];
+
+  result[startIndex] = itemEnd;
+  result[endIndex] = itemStart;
 
   return result;
 };
@@ -147,7 +150,3 @@ function App() {
 }
 
 export default App;
-
-/* 
-  validar cuando en el slock hay un item, se deben intercambiar
-*/
