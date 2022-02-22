@@ -61,7 +61,6 @@ function App() {
   };
 
   const onDragEnd = (result) => {
-    console.log(result);
     const { source, destination } = result;
 
     const [grupoSource, idSource] = source.droppableId.split("-");
@@ -71,18 +70,29 @@ function App() {
 
     if (grupoSource !== grupoDes) {
       const copiaSource = nuevoEstado[grupoSource].items[idSource];
+      const copiaDes = nuevoEstado[grupoDes].items[idDestination];
+
       copiaSource.grupo = "";
       nuevoEstado[grupoDes].items[idDestination] = {
         ...copiaSource,
         grupo: grupoDes,
       };
 
-      console.log(nuevoEstado);
-      setGrupos(nuevoEstado);
+      if (copiaDes.grupo !== "") {
+        copiaDes.grupo = grupoSource;
+        nuevoEstado[grupoSource].items[copiaDes.id] = {
+          ...copiaDes,
+          grupo: grupoSource,
+        };
+      }
     } else {
-      nuevoEstado[grupoSource].items = reorder(nuevoEstado[grupoSource].items, idSource, idDestination);
-      setGrupos(nuevoEstado);
+      nuevoEstado[grupoSource].items = reorder(
+        nuevoEstado[grupoSource].items,
+        idSource,
+        idDestination
+      );
     }
+    setGrupos(nuevoEstado);
   };
 
   return (
